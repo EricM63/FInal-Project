@@ -1,0 +1,41 @@
+import time
+from datetime import datetime
+from picamera import PiCamera
+from gpiozero import MotionSensor
+from gpiozero import Button
+pir = MotionSensor(4)
+button = Button(17)
+camera = PiCamera()
+
+#function for activating camera
+def camera_on(status):
+    if status == True:
+        print("motion detected")
+        camera.start_preview()    
+        # add button press / if no button press just exit
+        if button.wait_for_press(30.0) == True:
+            print("taking picture")
+            new_file = str(datetime.now()) + ".jpg"
+            camera.capture(new_file)
+
+        # quit preview
+        camera.stop_preview()
+       
+       
+
+"""
+When motion is detected, camera is activated.
+"""
+def main():
+    while True:
+        print("waiting for motion")
+        pir.wait_for_motion()
+        camera_on(True)
+        # gpiozero motionsensor documentation states that minimum timeout
+        # for when output is True is 2.5 seconds, we must wait for when there is no more motion before
+        # attempting to activate camera again
+        pir.wait_for_no_motion(2.5)
+   
+
+if __name__ == "__main__":
+    main()
